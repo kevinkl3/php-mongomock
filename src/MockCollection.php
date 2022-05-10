@@ -12,6 +12,7 @@ use MongoDB\BSON\Regex;
 use MongoDB\Collection;
 use MongoDB\Driver\Exception\RuntimeException as DriverRuntimeException;
 use MongoDB\Model\BSONDocument;
+use MongoDB\Model\BSONArray;
 use MongoDB\Model\IndexInfoIteratorIterator;
 use MongoDB\Operation\FindOneAndUpdate;
 use PHPUnit\Framework\Constraint\Constraint;
@@ -613,8 +614,18 @@ class MockCollection extends Collection
 
         if (is_array($constraint)) {
             return $match = function ($val) use (&$constraint, &$match): bool {
+                //cast $val to array if it is an instance of BSONArray
+                //this will prevent is_array,array_reduce... from failing
+                if($val instanceof BSONArray){
+                    $val = (array)$val;
+                }
                 $result = true;
                 foreach ($constraint as $type => $operand) {
+                    //cast $operand to array if it is an instance of BSONArray
+                    //this will prevent is_array,array_reduce... from failing
+                    if($operand instanceof BSONArray){
+                        $operand = (array)$operand;
+                    }
                     switch ($type) {
                         // Mongo operators (subset)
                         case '$gt':
