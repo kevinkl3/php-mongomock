@@ -187,9 +187,10 @@ class MockCollection extends Collection
                 } else {
                     $documents = [$update];
                 }
-                $this->insertMany($documents, $options);
+                return $this->insertMany($documents, $options);
             }
         }
+        return null;
     }
 
     private function updateCore(&$doc, $update)

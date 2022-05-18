@@ -5,6 +5,7 @@ namespace Helmich\MongoMock\Tests;
 use Helmich\MongoMock\MockCollection;
 use Helmich\MongoMock\MockCursor;
 use Helmich\MongoMock\Exception;
+use Helmich\MongoMock\MockUpdateResult;
 use MongoDB\BSON\ObjectID;
 use MongoDB\BSON\Regex;
 use MongoDB\Collection;
@@ -597,6 +598,40 @@ class MockCollectionTest extends TestCase
             ['$set' => ['foo' => 'Kekse']],
             ['$set' => ['foo' => 'bar']]
         );
+    }
+
+    public function testUpdateUpsertReturnsUpdateResult()
+    {
+        $this->col->insertMany([
+           ['foo'=>'bar','baz' => 'boom'],
+           ['foo'=>'biz','baz' => 'zaz','bar' => 'booz'], 
+           ['zaz'=>'biz','fuu'=>'boor'],
+        ]);
+
+        //single existing record
+        $result = $this->col->updateOne(['foo'=>'bar'],['$set'=>['foo'=>'BAR']],['upsert'=>true]);
+        self::assertThat(($result instanceof MockUpdateResult),self::isTrue());
+        self::assertEquals(1,$result->getModifiedCount());
+        self::assertEquals(1,$result->getMatchedCount());
+        //many existing records
+        $result = $this->col->updateMany(['foo'=>['$exists'=>true]],['$set'=>['foo'=>'BAR']],['upsert'=>true]);
+        self::assertThat(($result instanceof MockUpdateResult),self::isTrue());
+        self::assertEquals(2,$result->getModifiedCount());
+        self::assertEquals(2,$result->getMatchedCount());
+
+        //single non-existing record
+        $result = $this->col->updateOne(['foo'=>'bin'],['$set'=>['foo'=>'BAN']],['upsert'=>true]);
+        self::assertThat(($result instanceof MockUpdateResult),self::isTrue());
+        self::assertEquals(0,$result->getModifiedCount());
+        self::assertEquals(0,$result->getMatchedCount());
+        self::assertEquals(1,$result->getUpsertedCount());
+        
+        //many non-existing records
+        $result = $this->col->updateMany(['foo'=>'fun'],['$set'=>['bon'=>'boo']],['upsert'=>true]);
+        self::assertThat(($result instanceof MockUpdateResult),self::isTrue());
+        self::assertEquals(0,$result->getModifiedCount());
+        self::assertEquals(0,$result->getMatchedCount());
+        self::assertEquals(1,$result->getUpsertedCount());
     }
 
     /**
