@@ -38,7 +38,10 @@ class MockUpdateResult extends UpdateResult
 
     public function getUpsertedId()
     {
-        return $this->upsertedIds;
+        foreach ($this->upsertedIds as $id) {
+            return $id;
+        }
+        return null;
     }
 
     public function isAcknowledged()
