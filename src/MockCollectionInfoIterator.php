@@ -3,7 +3,7 @@
 namespace Helmich\MongoMock;
 
 use ArrayIterator;
-use MongoDB\Model\CollectionInfoIterator;
+use Iterator;
 /**
  * Implementation of CollectionInfoIterator 
  * in case MongoDB\Model\CollectionInfoLegacyIterator is
@@ -11,7 +11,7 @@ use MongoDB\Model\CollectionInfoIterator;
  * 
  * @package Helmich\MongoMock
  */
-class MockCollectionInfoIterator implements CollectionInfoIterator {
+class MockCollectionInfoIterator implements Iterator {
     private $arrayIterator;
 
     public function __construct(ArrayIterator $arrayIterator) {
@@ -22,10 +22,12 @@ class MockCollectionInfoIterator implements CollectionInfoIterator {
         $this->arrayIterator->rewind();
     }
 
+    #[\ReturnTypeWillChange]
     public function current() {
         return $this->arrayIterator->current();
     }
 
+    #[\ReturnTypeWillChange]
     public function key() {
         return $this->arrayIterator->key();
     }

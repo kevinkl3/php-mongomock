@@ -21,22 +21,22 @@ class MockUpdateResult extends UpdateResult
         $this->upsertedIds = $upsertedIds;
     }
 
-    public function getMatchedCount()
+    public function getMatchedCount(): int
     {
         return $this->matched;
     }
 
-    public function getModifiedCount()
+    public function getModifiedCount(): int
     {
         return $this->modified;
     }
 
-    public function getUpsertedCount()
+    public function getUpsertedCount(): int
     {
         return count($this->upsertedIds);
     }
 
-    public function getUpsertedId()
+    public function getUpsertedId(): mixed
     {
         foreach ($this->upsertedIds as $id) {
             return $id;
@@ -44,7 +44,7 @@ class MockUpdateResult extends UpdateResult
         return null;
     }
 
-    public function isAcknowledged()
+    public function isAcknowledged(): bool
     {
         return true;
     }

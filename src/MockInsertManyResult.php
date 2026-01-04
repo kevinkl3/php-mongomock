@@ -16,17 +16,17 @@ class MockInsertManyResult extends InsertManyResult
         $this->insertedIds = $insertedIds;
     }
 
-    public function getInsertedCount()
+    public function getInsertedCount(): int
     {
         return count($this->insertedIds);
     }
 
-    public function getInsertedIds()
+    public function getInsertedIds(): array
     {
         return $this->insertedIds;
     }
 
-    public function isAcknowledged()
+    public function isAcknowledged(): bool
     {
         return true;
     }

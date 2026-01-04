@@ -4,7 +4,6 @@ namespace Helmich\MongoMock\Tests;
 
 use Helmich\MongoMock\MockDatabase;
 use PHPUnit\Framework\TestCase;
-use MongoDB\Model\CollectionInfoIterator;
 
 class MockDatabaseTest extends TestCase
 {
@@ -22,7 +21,7 @@ class MockDatabaseTest extends TestCase
         ];
 
         $result = $db->listCollections();
-        self::assertInstanceOf(CollectionInfoIterator::class,$result);
+        self::assertInstanceOf(\Iterator::class,$result);
 
         $names = [];
         foreach($result as $col){

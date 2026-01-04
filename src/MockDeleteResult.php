@@ -21,27 +21,27 @@ class MockDeleteResult extends DeleteResult
         $this->deletedIds = $deletedIds;
     }
 
-    public function getMatchedCount()
+    public function getMatchedCount(): int
     {
         return $this->matched;
     }
 
-    public function getModifiedCount()
+    public function getModifiedCount(): int
     {
         return $this->modified;
     }
 
-    public function getDeletedCount()
+    public function getDeletedCount(): int
     {
         return count($this->deletedIds);
     }
 
-    public function getDeletedIds()
+    public function getDeletedIds(): array
     {
         return $this->deletedIds;
     }
 
-    public function isAcknowledged()
+    public function isAcknowledged(): bool
     {
         return true;
     }

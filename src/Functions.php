@@ -1,6 +1,6 @@
 <?php
 
-use PHPUnit_Framework_Constraint as Constraint;
+use PHPUnit\Framework\Constraint\Constraint;
 
 function collectionExecutedQuery(...$params): Constraint
 {

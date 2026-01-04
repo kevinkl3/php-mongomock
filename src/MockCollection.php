@@ -9,12 +9,18 @@ use MongoDB\BSON;
 use MongoDB\BSON\Binary;
 use MongoDB\BSON\ObjectID;
 use MongoDB\BSON\Regex;
+use MongoDB\BulkWriteResult;
 use MongoDB\Collection;
+use MongoDB\DeleteResult;
+use MongoDB\Driver\CursorInterface;
 use MongoDB\Driver\Exception\RuntimeException as DriverRuntimeException;
+use MongoDB\InsertManyResult;
+use MongoDB\InsertOneResult;
+use MongoDB\UpdateResult;
 use MongoDB\Model\BSONDocument;
 use MongoDB\Model\BSONArray;
-use MongoDB\Model\IndexInfoIteratorIterator;
 use MongoDB\Operation\FindOneAndUpdate;
+use MongoDB\Builder\Pipeline;
 use PHPUnit\Framework\Constraint\Constraint;
 
 /**
@@ -76,7 +82,7 @@ class MockCollection extends Collection
      * @param string $name
      * @param MockDatabase $db
      */
-    public function __construct(string $name = 'collection', MockDatabase $db = null, array $options = [])
+    public function __construct(string $name = 'collection', ?MockDatabase $db = null, array $options = [])
     {
         $this->name = $name;
         $this->db = $db;
@@ -91,7 +97,7 @@ class MockCollection extends Collection
         $this->typeMapper = TypeMapper::createWithDefault($this->options['typeMap'] ?? []);
     }
 
-    public function insertOne($document, array $options = [])
+    public function insertOne(object|array $document, array $options = []): InsertOneResult
     {
         if (!isset($document['_id'])) {
             $document['_id'] = new ObjectID();
@@ -122,7 +128,7 @@ class MockCollection extends Collection
         return new MockInsertOneResult($document['_id']);
     }
 
-    public function insertMany(array $documents, array $options = [])
+    public function insertMany(array $documents, array $options = []): InsertManyResult
     {
         $insertedIds = array_map(function ($doc) use ($options) {
             return $this->insertOne($doc, $options)->getInsertedId();
@@ -131,7 +137,7 @@ class MockCollection extends Collection
         return new MockInsertManyResult($insertedIds);
     }
 
-    public function deleteMany($filter, array $options = [])
+    public function deleteMany(object|array $filter, array $options = []): DeleteResult
     {
         $matcher = $this->matcherFromQuery($filter);
         $count = 0;
@@ -145,7 +151,7 @@ class MockCollection extends Collection
         return new MockDeleteResult($count, $count);
     }
 
-    public function updateOne($filter, $update, array $options = [])
+    public function updateOne(object|array $filter, object|array $update, array $options = []): UpdateResult
     {
         $matcher = $this->matcherFromQuery($filter);
         foreach ($this->documents as $i => &$doc) {
@@ -160,7 +166,7 @@ class MockCollection extends Collection
         return new MockUpdateResult(0, 0, $upserted);
     }
 
-    public function updateMany($filter, $update, array $options = [])
+    public function updateMany(object|array $filter, object|array $update, array $options = []): UpdateResult
     {
         $matcher = $this->matcherFromQuery($filter);
         $matched = 0;
@@ -239,7 +245,7 @@ class MockCollection extends Collection
 
     }
 
-    public function find($filter = [], array $options = []): MockCursor
+    public function find(object|array $filter = [], array $options = []): CursorInterface
     {
         $typeMapper = $this->typeMapper;
         if (isset($options['typeMap'])) {
@@ -303,7 +309,7 @@ class MockCollection extends Collection
         return new MockCursor($cursor);
     }
 
-    public function findOne($filter = [], array $options = [])
+    public function findOne(object|array $filter = [], array $options = []): object|array|null
     {
         $results = $this->find($filter, $options);
         foreach ($results as $result) {
@@ -312,7 +318,7 @@ class MockCollection extends Collection
         return null;
     }
 
-    public function count($filter = [], array $options = [])
+    public function count(object|array $filter = [], array $options = []): int
     {
         $count = 0;
         $matcher = $this->matcherFromQuery($filter);
@@ -324,12 +330,12 @@ class MockCollection extends Collection
         return $count;
     }
 
-    public function countDocuments($filter = [], array $options = [])
+    public function countDocuments(object|array $filter = [], array $options = []): int
     {
         return $this->count($filter, $options);
     }
 
-    public function createIndex($key, array $options = [])
+    public function createIndex(object|array|string $key, array $options = []): string
     {
         $name = '';
         if (is_string($key)) {
@@ -345,34 +351,39 @@ class MockCollection extends Collection
         }
 
         $this->indices[$name] = new Index($key, $options);
+        return $name;
     }
 
-    public function drop(array $options = [])
+    public function drop(array $options = []): void
     {
         $this->documents = [];
         $this->dropped = true;
     }
 
-    public function aggregate(array $pipeline, array $options = [])
+    public function aggregate(Pipeline|array $pipeline, array $options = []): CursorInterface
     {
         // TODO: Implement this function
+        throw new \RuntimeException('aggregate() is not yet implemented');
     }
 
-    public function bulkWrite(array $operations, array $options = [])
+    public function bulkWrite(array $operations, array $options = []): BulkWriteResult
     {
         // TODO: Implement this function
+        throw new \RuntimeException('bulkWrite() is not yet implemented');
     }
 
-    public function createIndexes(array $indexes, array $options = [])
+    public function createIndexes(array $indexes, array $options = []): array
     {
+        $result = [];
         foreach ($indexes as $index) {
             $key = $index['key'];
             unset($index['key']);
-            $this->createIndex($key, $index);
+            $result[] = $this->createIndex($key, $index);
         }
+        return $result;
     }
 
-    public function deleteOne($filter, array $options = [])
+    public function deleteOne(object|array $filter, array $options = []): DeleteResult
     {
         $matcher = $this->matcherFromQuery($filter);
         $count = 0;
@@ -389,7 +400,7 @@ class MockCollection extends Collection
         return new MockDeleteResult($count, $count, $deletedIds);
     }
 
-    public function distinct($fieldName, $filter = [], array $options = [])
+    public function distinct(string $fieldName, object|array $filter = [], array $options = []): array
     {
         $values = [];
 
@@ -402,27 +413,29 @@ class MockCollection extends Collection
         return array_unique($values);
     }
 
-    public function dropIndex($indexName, array $options = [])
+    public function dropIndex(\MongoDB\Model\IndexInfo|string $indexName, array $options = []): void
     {
         // TODO: Implement this function
     }
 
-    public function dropIndexes(array $options = [])
+    public function dropIndexes(array $options = []): void
     {
         // TODO: Implement this function
     }
 
-    public function findOneAndDelete($filter, array $options = [])
+    public function findOneAndDelete(object|array $filter, array $options = []): object|array|null
     {
         // TODO: Implement this function
+        throw new \RuntimeException('findOneAndDelete() is not yet implemented');
     }
 
-    public function findOneAndReplace($filter, $replacement, array $options = [])
+    public function findOneAndReplace(object|array $filter, object|array $replacement, array $options = []): object|array|null
     {
         // TODO: Implement this function
+        throw new \RuntimeException('findOneAndReplace() is not yet implemented');
     }
 
-    public function findOneAndUpdate($filter, $update, array $options = [])
+    public function findOneAndUpdate(object|array $filter, object|array $update, array $options = []): object|array|null
     {
         if (!isset($options['returnDocument'])) {
             // Standard behaviour according to https://docs.mongodb.com/php-library/v1.2/reference/method/MongoDBCollection-findOneAndUpdate/#definition
@@ -445,12 +458,12 @@ class MockCollection extends Collection
         throw new Exception('Given option value "' . $options['returnDocument'] . '" for findOneAndUpdate() "returnDocument" option is invalid');
     }
 
-    public function getCollectionName()
+    public function getCollectionName(): string
     {
         return $this->name;
     }
 
-    public function getDatabaseName()
+    public function getDatabaseName(): string
     {
         if ($this->db === null) {
             throw new Exception('database required to call getDatabaseName()');
@@ -459,12 +472,13 @@ class MockCollection extends Collection
         }
     }
 
-    public function getNamespace()
+    public function getNamespace(): string
     {
         // TODO: Implement this function
+        throw new \RuntimeException('getNamespace() is not yet implemented');
     }
 
-    public function listIndexes(array $options = [])
+    public function listIndexes(array $options = []): \Iterator
     {
         $indices = [];
         $dbName = $this->db ? $this->db->getDatabaseName() : "unknown";
@@ -479,17 +493,51 @@ class MockCollection extends Collection
             ];
         }
 
-        return new IndexInfoIteratorIterator(new ArrayIterator($indices));
+        return new ArrayIterator($indices);
     }
 
-    public function replaceOne($filter, $replacement, array $options = [])
+    public function replaceOne(object|array $filter, object|array $replacement, array $options = []): UpdateResult
     {
-        // TODO: Implement this function
+        $matcher = $this->matcherFromQuery($filter);
+        foreach ($this->documents as $i => &$doc) {
+            if ($matcher($doc)) {
+                // Replace the document, preserving the _id
+                $replacementId = $doc['_id'] ?? null;
+                if (!$replacement instanceof BSONDocument) {
+                    $replacement = new BSONDocument($replacement);
+                }
+                // Preserve the original _id if it exists in the replacement, otherwise use the original
+                if (!isset($replacement['_id']) && $replacementId !== null) {
+                    $replacement['_id'] = $replacementId;
+                }
+                $this->documents[$i] = $replacement;
+                return new MockUpdateResult(1, 1);
+            }
+        }
+
+        // Handle upsert if no document was found
+        if (isset($options['upsert']) && $options['upsert']) {
+            if (!$replacement instanceof BSONDocument) {
+                $replacement = new BSONDocument($replacement);
+            }
+            // Merge filter with replacement for upsert
+            if (is_array($filter)) {
+                $upsertDocument = array_merge($filter, $replacement->toArray());
+            } else {
+                $upsertDocument = $replacement->toArray();
+            }
+            $result = $this->insertMany([$upsertDocument], $options);
+            $upserted = $result->getInsertedIds();
+            return new MockUpdateResult(0, 0, $upserted);
+        }
+
+        return new MockUpdateResult(0, 0);
     }
 
-    public function withOptions(array $options = [])
+    public function withOptions(array $options = []): Collection
     {
         // TODO: Implement this function
+        throw new \RuntimeException('withOptions() is not yet implemented');
     }
 
     private function buildRecursiveMatcherQuery(array $query): array

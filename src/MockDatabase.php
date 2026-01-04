@@ -55,9 +55,9 @@ class MockDatabase extends Database
      * List collections
      *
      * @param  array $options
-     * @return CollectionInfoLegacyIterator|CollectionInfoIterator
+     * @return CollectionInfoLegacyIterator|\Iterator
      */
-    public function listCollections(array $options = [])
+    public function listCollections(array $options = []): \Iterator
     {
         $collections = [];
         foreach ($this->collections as $name => $collection) {
@@ -88,7 +88,7 @@ class MockDatabase extends Database
      *
      * @return string
      */
-    public function getDatabaseName()
+    public function getDatabaseName(): string
     {
         return $this->name;
     }
@@ -99,7 +99,7 @@ class MockDatabase extends Database
      * @param  string $name
      * @return Collection
      */
-    public function __get($name)
+    public function __get(string $name): Collection
     {
         return $this->selectCollection($name);
     }
@@ -111,19 +111,15 @@ class MockDatabase extends Database
      * @param array  $options
      * @return array
      */
-    public function createCollection($name, array $options = [])
+    public function createCollection(string $collectionName, array $options = []): void
     {
-        if (isset($this->collections[$name])) {
+        if (isset($this->collections[$collectionName])) {
             throw new RuntimeException('collection already exists');
         }
 
-        $this->collections[$name] = [
-            'collection' => new MockCollection($name, $this),
+        $this->collections[$collectionName] = [
+            'collection' => new MockCollection($collectionName, $this),
             'options' => $options
-        ];
-
-        return [
-            'ok' => 1.0
         ];
     }
 
@@ -134,11 +130,11 @@ class MockDatabase extends Database
      * @param  array  $options
      * @return Collection
      */
-    public function selectCollection($name, array $options = [])
+    public function selectCollection(string $collectionName, array $options = []): Collection
     {
-        if (!isset($this->collections[$name])) {
-            $this->createCollection($name);
+        if (!isset($this->collections[$collectionName])) {
+            $this->createCollection($collectionName);
         }
-        return $this->collections[$name]['collection'];
+        return $this->collections[$collectionName]['collection'];
     }
 }

@@ -21,9 +21,11 @@ class TypeMapper
     /**
      * @param array $typeMapDefaultOverwrite
      * @return TypeMapper
+     * @phpstan-return static
      */
     static function createWithDefault(array $typeMapDefaultOverwrite = []): TypeMapper
     {
+        /** @phpstan-ignore-next-line */
         return new static(array_merge(static::DEFAULT_TYPE_MAP, $typeMapDefaultOverwrite));
     }
 

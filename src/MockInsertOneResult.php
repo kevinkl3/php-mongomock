@@ -14,17 +14,17 @@ class MockInsertOneResult extends InsertOneResult
         $this->insertedId = $insertedId;
     }
 
-    public function getInsertedCount()
+    public function getInsertedCount(): int
     {
         return 1;
     }
 
-    public function getInsertedId()
+    public function getInsertedId(): mixed
     {
         return $this->insertedId;
     }
 
-    public function isAcknowledged()
+    public function isAcknowledged(): bool
     {
         return true;
     }
