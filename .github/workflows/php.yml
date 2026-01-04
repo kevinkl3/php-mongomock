@@ -9,22 +9,15 @@ jobs:
   build:
     strategy:      
       matrix:
-        php: ['7.2', '7.3', '7.4', '8.0']
-        phpunit: ['6.0', '7.0', '8.0', '9.0']
-        exclude:
-        - php: '7.2'
-          phpunit: '9.0'
-        - php: '8.0'
-          phpunit: '6.0'
-        - php: '8.0'
-          phpunit: '7.0'
+        php: ['8.0', '8.1', '8.2', '8.3', '8.4']
+        phpunit: ['10.0', '11.0']
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v4
       
     - name: Setup PHP
-      uses: shivammathur/setup-php@v1
+      uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
         extensions: mbstring, intl, json, mongodb
@@ -35,7 +28,7 @@ jobs:
 
     - name: Declare required PHPUnit version
       run: |
-        composer require --no-update --dev phpunit/phpunit ~${{ matrix.phpunit }}
+        composer require --no-update --dev phpunit/phpunit ^${{ matrix.phpunit }}
 
     - name: Install dependencies
       run: composer install --prefer-dist --no-progress --no-suggest
